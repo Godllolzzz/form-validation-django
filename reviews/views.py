@@ -1,3 +1,4 @@
+from typing import Any
 from reviews.models import Review
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
@@ -42,3 +43,17 @@ class ReviewsListView(ListView):
 class SingleReviewView(DetailView):
     template_name = "reviews/single_review.html"
     model = Review
+
+    def get_context_data(self, **kwargs: Any):
+        context = super().get_context_data(**kwargs)
+        loaded_reveiw = self.object
+        request = self.request
+        favourite_id = request.session.get("favorite_review")
+        context["is_favorite"] = str(loaded_reveiw.id) == favourite_id
+        return context
+
+class AddFavoriteView(View):
+    def post(self, request):
+        review_id = request.POST["review_id"]
+        request.session["favorite_review"] = review_id
+        return HttpResponseRedirect("/reviews/" + review_id)
